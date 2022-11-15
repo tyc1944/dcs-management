@@ -1,0 +1,14 @@
+plugins {
+    id 'dcs-management.java-application-conventions'
+}
+
+application {
+    mainClass = 'com.yunmo.dcs.management.ServerApplication'
+}
+dependencies {
+    implementation project(':dcs-infrastruction')
+    implementation 'com.yunmo.boot:resource-server-starter'
+    implementation 'com.yunmo.boot:rest-server-starter'
+    implementation 'com.yunmo.boot:data-starter'
+    implementation 'com.alibaba:fastjson:1.2.76'
+}

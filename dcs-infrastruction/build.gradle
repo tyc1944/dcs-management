@@ -1,0 +1,19 @@
+plugins {
+    id 'dcs-management.java-library-conventions'
+}
+
+sourceSets {
+    main {
+        output.resourcesDir = "build/classes/java/main"
+    }
+}
+compileJava {
+    dependsOn(cleanProcessResources, processResources)
+}
+
+dependencies {
+    api project(':dcs-domain')
+    api "com.baomidou:mybatis-plus-boot-starter:$mybatisPlusBootStarter"
+    implementation "com.yunmo.boot:data-starter"
+    implementation 'com.alibaba:fastjson:1.2.76'
+}

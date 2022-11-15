@@ -1,0 +1,1 @@
+INSERT INTO `dcs_management`.`user_account` (`id`, `created_by`, `created_date`, `last_modified_by`, `last_modified_date`, `account_name`,`enabled`, `password`, `phone`) VALUES (1, 1, '2022-06-20 9:54:24', null, null, 'admin', true, '$2a$10$q61Jxm1dYTwA35wauzNP7uYkmoZ06fZ8U0dM81PgqHP2rD.Whm1US', null);

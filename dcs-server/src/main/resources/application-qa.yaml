@@ -1,0 +1,59 @@
+spring:
+  devtools:
+    restart:
+      enabled: true
+  jpa:
+    properties:
+      hibernate:
+        implicit_naming_strategy: org.hibernate.boot.model.naming.ImplicitNamingStrategyComponentPathImpl
+        physical_naming_strategy: org.springframework.boot.orm.jpa.hibernate.SpringPhysicalNamingStrategy
+        enable_lazy_load_no_trans: true
+        dialect: org.hibernate.dialect.MySQL57Dialect
+        show_sql: true
+        hbm2ddl:
+          import_files: import.sql
+          auto: update
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://10.234.34.255:3306/dcs_management?allowPublicKeyRetrieval=true&useSSL=false&autoReconnect=true
+    username: dcs_management
+    password: mlq9u9k3f0
+    hikari:
+      prepStmtCacheSize: 256
+      prepStmtCacheSqlLimit: 2048
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://10.234.28.197:8080/oauth2/jwks
+
+  redis:
+    database: 0
+    host: 10.234.2.177
+    password: mlchiepukf
+    redisson:
+      singleServerConfig: |
+        idleConnectionTimeout: 10000
+        connectTimeout: 10000
+        timeout: 3000
+        retryAttempts: 3
+        retryInterval: 1500
+        subscriptionsPerConnection: 5
+        clientName: null
+        subscriptionConnectionMinimumIdleSize: 1
+        subscriptionConnectionPoolSize: 50
+        connectionMinimumIdleSize: 24
+        connectionPoolSize: 64
+        database: 0
+        dnsMonitoringInterval: 5000
+        threads: 16
+        nettyThreads: 32
+        codec: !<org.redisson.codec.MarshallingCodec> { }
+        transportMode: "NIO"
+
+logging:
+  level:
+    org:
+      springframework:
+        security: TRACE

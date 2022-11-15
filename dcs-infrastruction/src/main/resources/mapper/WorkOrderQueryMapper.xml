@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.yunmo.dcs.infrastruction.repository.mybatis.WorkOrderQueryMapper">
+    <resultMap id="BaseResultMap" type="com.yunmo.dcs.domain.WorkOrder">
+        <id property="id" column="id" jdbcType="BIGINT"/>
+        <result property="createdBy" column="created_by" jdbcType="BIGINT"/>
+        <result property="createdDate" column="created_date"/>
+        <result property="lastModifiedBy" column="last_modified_by" jdbcType="BIGINT"/>
+        <result property="lastModifiedDate" column="last_modified_date"/>
+        <result property="remark" column="remark" jdbcType="VARCHAR"/>
+        <result property="workStatus" column="work_status" jdbcType="VARCHAR"/>
+        <result property="documents" column="documents" jdbcType="OTHER"/>
+        <result property="planEndTime" column="plan_end_time"/>
+        <result property="planStartTime" column="plan_start_time"/>
+        <result property="closeReason" column="close_reason" jdbcType="VARCHAR"/>
+        <result property="closeTime" column="close_time"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="workerId" column="worker_id"/>
+        <association property="project" column="project_id"
+                     select="com.yunmo.dcs.infrastruction.repository.mybatis.ProjectQueryMapper.selectByProjectId"/>
+        <association autoMapping="true" columnPrefix="contact_" property="contact"
+                     javaType="com.yunmo.dcs.domain.Contact"/>
+        <association autoMapping="true" columnPrefix="location_" property="location"
+                     javaType="com.yunmo.dcs.domain.Location"/>
+    </resultMap>
+
+    <resultMap id="BaseResultMapView" type="com.yunmo.dcs.infrastruction.view.WorkOrderView">
+        <association property="createdMan" column="created_by"
+                     select="com.yunmo.dcs.infrastruction.repository.mybatis.UserAccountQueryMapper.selectById"/>
+        <association property="worker" column="worker_id"
+                     select="com.yunmo.dcs.infrastruction.repository.mybatis.UserAccountQueryMapper.selectById"/>
+        <association property="workOrder" resultMap="BaseResultMap"/>
+
+    </resultMap>
+
+    <select id="selectListWorkOrderPage" resultMap="BaseResultMapView">
+        select w.*
+        from work_order w left join project p
+        on w.project_id=p.id
+        <where>
+               <if test="listWorkOrderViewRequest.logId!=null">
+                   and worker_id=#{listWorkOrderViewRequest.logId}
+               </if>
+            <if test="listWorkOrderViewRequest.finishTime !=null and listWorkOrderViewRequest.finishTime.length>0">
+                and w.finish_time >= #{listWorkOrderViewRequest.finishTime[0]}
+            </if>
+            <if test="listWorkOrderViewRequest.finishTime !=null and listWorkOrderViewRequest.finishTime.length>1">
+                <![CDATA[
+                               and  w.finish_time <  #{listWorkOrderViewRequest.finishTime[1]} + INTERVAL 1 DAY
+                                ]]>
+            </if>
+            <if test="listWorkOrderViewRequest.name!=null">
+                and p.name = #{listWorkOrderViewRequest.name}
+            </if>
+            <if test="listWorkOrderViewRequest.workStatus!=null">
+                and w.work_status = #{listWorkOrderViewRequest.workStatus}
+            </if>
+            <if test="listWorkOrderViewRequest.planStartTime!=null">
+                and w.plan_start_time like concat(#{listWorkOrderViewRequest.planStartTime}, '%')
+            </if>
+            <if test="listWorkOrderViewRequest.searchField!=null and listWorkOrderViewRequest.searchField!=''">
+                and (w.id = #{listWorkOrderViewRequest.searchField} or w.name like concat('%',
+                #{listWorkOrderViewRequest.searchField}, '%'))
+            </if>
+            <if test="listWorkOrderViewRequest.dateRange !=null and listWorkOrderViewRequest.dateRange.length>0">
+                and w.plan_start_time >= #{listWorkOrderViewRequest.dateRange[0]}
+            </if>
+            <if test="listWorkOrderViewRequest.dateRange !=null and listWorkOrderViewRequest.dateRange.length>1">
+                <![CDATA[
+                               and  w.plan_start_time <  #{listWorkOrderViewRequest.dateRange[1]} + INTERVAL 1 DAY
+                                ]]>
+
+            </if>
+        </where>
+        <choose>
+            <when test="listWorkOrderViewRequest.planStartTime!=null">
+                order by field(work_status,"PROCESSING","FINISHED","CLOSED"),created_date desc
+            </when>
+            <when test="listWorkOrderViewRequest.workStatus==@com.yunmo.dcs.domain.WorkOrder$WorkStatus@PROCESSING">
+                order by created_date desc
+            </when>
+            <when test="listWorkOrderViewRequest.workStatus==@com.yunmo.dcs.domain.WorkOrder$WorkStatus@FINISHED">
+                order by finish_time desc
+            </when>
+            <when test="listWorkOrderViewRequest.workStatus==@com.yunmo.dcs.domain.WorkOrder$WorkStatus@CLOSED">
+                order by close_time desc
+            </when>
+            <otherwise>
+                order by last_modified_date desc
+            </otherwise>
+        </choose>
+    </select>
+
+    <select id="selectListWorkOrderPageByProject" resultMap="BaseResultMapView">
+        select *
+        from work_order
+        <where>
+            and project_id=#{projectId}
+            <if test="listWorkOrderViewRequest.searchField!=null and listWorkOrderViewRequest.searchField!=''">
+                and name like concat('%',
+                #{listWorkOrderViewRequest.searchField}, '%')
+            </if>
+        </where>
+    </select>
+
+    <select id="selectWorkerByProjectId" resultMap="BaseResultMapView">
+        select w.* from work_order w
+        <where>
+            and finish_time = (select max(finish_time)
+            from work_order where project_id = w.project_id)
+            and w.project_id=#{id}
+        </where>
+    </select>
+
+    <select id="selectWorkerOrderById" resultMap="BaseResultMapView">
+        select *
+        from work_order
+        where id = #{id}
+    </select>
+
+<!--    <select id="selectListWorkOrderPageByType" resultMap="BaseResultMapView">-->
+<!--        select w.*-->
+<!--        from work_order w left join project p-->
+<!--        on w.project_id=p.id-->
+<!--        <where>-->
+<!--            <if test="listWorkOrderViewRequest.finishTime !=null and listWorkOrderViewRequest.finishTime.length>0">-->
+<!--                and w.finish_time >= #{listWorkOrderViewRequest.finishTime[0]}-->
+<!--            </if>-->
+<!--            <if test="listWorkOrderViewRequest.finishTime !=null and listWorkOrderViewRequest.finishTime.length>1">-->
+<!--                <![CDATA[-->
+<!--                               and  w.finish_time <  #{listWorkOrderViewRequest.finishTime[1]} + INTERVAL 1 DAY-->
+<!--                                ]]>-->
+
+<!--            </if>-->
+<!--            <if test="listWorkOrderViewRequest.name!=null">-->
+<!--                and p.name = #{listWorkOrderViewRequest.name}-->
+<!--            </if>-->
+<!--            <if test="listWorkOrderViewRequest.searchField!=null and listWorkOrderViewRequest.searchField!=''">-->
+<!--                and w.name like concat('%',-->
+<!--                #{listWorkOrderViewRequest.searchField}, '%')-->
+<!--            </if>-->
+<!--            <if test="listWorkOrderViewRequest.workStatus!=null">-->
+<!--                and w.work_status = #{listWorkOrderViewRequest.workStatus}-->
+<!--            </if>-->
+<!--        </where>-->
+<!--    </select>-->
+</mapper>
